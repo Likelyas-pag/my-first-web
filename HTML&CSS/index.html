@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>📚 学习进度追踪 · 知识之塔</title>
+    <!-- Google Fonts 引入手写感与复古字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <style>
+        /* ===== 全局配色 · 复古暖调 ===== */
+        :root {
+            --bg-canvas: #ebe3cb;
+            --bg-paper: #fcf9f0;
+            --primary-blue: #395c78;
+            --accent-gold: #e2c47c;
+            --text-dark: #2b3742;
+            --text-muted: #6e7d8c;
+            --border-line: #354656;
+            --complete-green: #679275;
+            --shadow-color: rgba(53, 70, 86, 0.18);
+        }
+
+        * {
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 40px 20px;
+            background-color: var(--bg-canvas);
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(226, 196, 124, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(57, 92, 120, 0.10) 0%, transparent 50%);
+            font-family: 'Quicksand', 'ZCOOL XiaoWei', -apple-system, sans-serif;
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        /* ===== 主卡片 ===== */
+        .adventure-card {
+            background-color: var(--bg-paper);
+            border: 3px solid var(--border-line);
+            border-radius: 28px;
+            box-shadow: 12px 12px 0 var(--border-line);
+            width: 100%;
+            max-width: 1100px;
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ===== 左侧面板 ===== */
+        .hero-panel {
+            background-color: #f7f3e6;
+            border-right: 3px solid var(--border-line);
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .artwork-window {
+            border: 3px solid var(--border-line);
+            border-radius: 18px;
+            height: 220px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 4px 4px 0 var(--border-line);
+            margin-bottom: 22px;
+        }
+        .artwork-window img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 30%;
+            filter: sepia(10%) contrast(1.02);
+            transition: transform 0.5s ease;
+        }
+        .artwork-window:hover img {
+            transform: scale(1.05);
+        }
+        .artwork-tag {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: var(--bg-paper);
+            border: 2px solid var(--border-line);
+            padding: 4px 12px;
+            font-size: 11px;
+            border-radius: 8px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        /* —— 学习状态 —— */
+        .char-info {
+            margin-bottom: 18px;
+        }
+        .char-title {
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 26px;
+            margin: 0 0 6px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .char-sub {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+        .char-level-badge {
+            background: var(--primary-blue);
+            color: var(--bg-paper);
+            padding: 4px 14px;
+            border-radius: 99px;
+            font-size: 13px;
+            font-weight: 700;
+            border: 2px solid var(--border-line);
+            display: inline-block;
+        }
+
+        .exp-container {
+            margin-top: 14px;
+        }
+        .exp-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+        .exp-bar-track {
+            height: 16px;
+            background: #e8e2cf;
+            border: 2px solid var(--border-line);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .exp-bar-fill {
+            height: 100%;
+            background: var(--accent-gold);
+            width: 0%;
+            transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* —— 引导小提示 —— */
+        .tip-box {
+            background: #f5edd7;
+            border: 2px solid var(--border-line);
+            border-radius: 14px;
+            padding: 12px 16px;
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 16px 0 20px 0;
+            box-shadow: 3px 3px 0 var(--shadow-color);
+        }
+        .tip-box i {
+            color: var(--accent-gold);
+            margin-right: 6px;
+        }
+
+        .btn-add-quest {
+            background: var(--accent-gold);
+            color: var(--text-dark);
+            border: 2px solid var(--border-line);
+            border-radius: 16px;
+            padding: 14px 20px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 4px 4px 0 var(--border-line);
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+        .btn-add-quest:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 var(--border-line);
+            background: #ebd196;
+        }
+        .btn-add-quest:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0 var(--border-line);
+        }
+
+        /* ===== 右侧面板 ===== */
+        .quest-board {
+            padding: 40px;
+            overflow-y: auto;
+            max-height: 680px;
+        }
+
+        .board-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 2px dashed rgba(53, 70, 86, 0.18);
+            padding-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .board-header h2 {
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 24px;
+            margin: 0;
+        }
+        .board-header .hint {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .quest-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 18px;
+        }
+
+        /* —— 课程卡片 —— */
+        .quest-card {
+            background: #fff;
+            border: 2px solid var(--border-line);
+            border-radius: 20px;
+            padding: 20px 22px;
+            box-shadow: 4px 4px 0 var(--shadow-color);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .quest-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 6px 6px 0 rgba(53, 70, 86, 0.25);
+        }
+        .quest-card.completed {
+            border-color: var(--complete-green);
+            background: #f1f8f4;
+            box-shadow: 4px 4px 0 rgba(103, 146, 117, 0.20);
+        }
+
+        .quest-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+        .quest-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+        .quest-icon {
+            font-size: 22px;
+            background: #f5edd7;
+            border: 2px solid var(--border-line);
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            flex-shrink: 0;
+        }
+        .quest-card.completed .quest-icon {
+            background: #dbebe1;
+            border-color: var(--complete-green);
+        }
+        .quest-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-dark);
+            word-break: break-word;
+        }
+
+        .quest-edit-group {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .btn-edit-tool {
+            border: none;
+            background: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 13px;
+            font-weight: 700;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .btn-edit-tool:hover {
+            color: var(--primary-blue);
+            background: rgba(57, 92, 120, 0.10);
+        }
+        .btn-edit-tool.delete:hover {
+            color: #c94c4c;
+            background: rgba(201, 76, 76, 0.10);
+        }
+
+        .quest-progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+        .quest-progress-track {
+            height: 12px;
+            background: #f0e9d7;
+            border: 2px solid var(--border-line);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .quest-card.completed .quest-progress-track {
+            border-color: var(--complete-green);
+            background: #e2ede6;
+        }
+        .quest-progress-fill {
+            height: 100%;
+            background: var(--primary-blue);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+        .quest-card.completed .quest-progress-fill {
+            background: var(--complete-green);
+        }
+
+        .quest-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .quest-nav-btns {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-control {
+            border: 2px solid var(--border-line);
+            background: var(--bg-paper);
+            color: var(--text-dark);
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            user-select: none;
+        }
+        .btn-control:hover {
+            background: var(--accent-gold);
+            transform: translateY(-2px);
+        }
+        .btn-control:active {
+            transform: translateY(1px);
+        }
+        .btn-control.minus:hover {
+            background: #f0d5c0;
+        }
+        .btn-control.plus:hover {
+            background: #c7dfc7;
+        }
+
+        .quest-status-tag {
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: #f0e9d7;
+            color: var(--text-muted);
+            border: 1px solid var(--border-line);
+        }
+        .quest-card.completed .quest-status-tag {
+            background: var(--complete-green);
+            color: #fff;
+            border-color: var(--complete-green);
+        }
+
+        /* ===== 弹窗 ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(43, 55, 66, 0.60);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-box {
+            background: var(--bg-paper);
+            border: 3px solid var(--border-line);
+            border-radius: 24px;
+            width: 460px;
+            max-width: 94vw;
+            padding: 30px 32px;
+            box-shadow: 8px 8px 0 var(--border-line);
+            transform: scale(0.92);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-overlay.active .modal-box {
+            transform: scale(1);
+        }
+        .modal-title {
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 22px;
+            margin: 0 0 18px 0;
+            border-bottom: 2px dashed rgba(53, 70, 86, 0.18);
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--text-dark);
+        }
+        .form-input {
+            width: 100%;
+            background: #fff;
+            border: 2px solid var(--border-line);
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 15px;
+            color: var(--text-dark);
+            transition: border 0.2s;
+        }
+        .form-input:focus {
+            border-color: var(--primary-blue);
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            gap: 14px;
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 22px;
+        }
+        .btn-dialog {
+            border: 2px solid var(--border-line);
+            padding: 10px 22px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-dialog.cancel {
+            background: #e8e2cf;
+            color: var(--text-dark);
+        }
+        .btn-dialog.cancel:hover {
+            background: #decba7;
+        }
+        .btn-dialog.save {
+            background: var(--primary-blue);
+            color: #fff;
+        }
+        .btn-dialog.save:hover {
+            background: #284459;
+        }
+
+        /* ===== 浮动反馈 ===== */
+        .exp-pop {
+            position: absolute;
+            color: #bf8d21;
+            font-weight: 800;
+            font-size: 18px;
+            pointer-events: none;
+            z-index: 999;
+            animation: floatUp 0.8s ease-out forwards;
+            text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff;
+        }
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) scale(0.8);
+                opacity: 1;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-50px) scale(1.10);
+                opacity: 0;
+            }
+        }
+
+        /* ===== 撒花 Canvas ===== */
+        #celebration-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 820px) {
+            .adventure-card {
+                grid-template-columns: 1fr;
+                border-radius: 20px;
+            }
+            .hero-panel {
+                border-right: none;
+                border-bottom: 3px solid var(--border-line);
+                padding: 28px 24px;
+            }
+            .quest-board {
+                padding: 28px 24px;
+                max-height: none;
+            }
+            .artwork-window {
+                height: 170px;
+            }
+            .char-title {
+                font-size: 22px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+        }
+        @media (max-width: 480px) {
+            body {
+                padding: 16px 10px;
+            }
+            .hero-panel {
+                padding: 20px 16px;
+            }
+            .quest-board {
+                padding: 20px 16px;
+            }
+            .quest-header {
+                flex-wrap: wrap;
+            }
+            .quest-edit-group {
+                margin-left: auto;
+            }
+            .modal-box {
+                padding: 22px 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 撒花画布 -->
+    <canvas id="celebration-canvas"></canvas>
+
+    <div class="adventure-card">
+
+        <!-- ====== 左侧：学习状态 & 引导 ====== -->
+        <div class="hero-panel">
+            <div>
+                <!-- 插画 -->
+                <div class="artwork-window">
+                    <img src="image_bf7127.png" alt="知识之塔" />
+                    <div class="artwork-tag">🧭 知识之塔</div>
+                </div>
+
+                <div class="char-info">
+                    <h1 class="char-title">
+                        📖 学习进度
+                        <span class="char-level-badge" id="level-badge">LV.1 知识学者</span>
+                    </h1>
+                    <div class="char-sub">
+                        <i class="fa-regular fa-compass" style="margin-right:4px;"></i>
+                        记录每门课的课时进度 · 每完成一节课，点击 <strong>「+」</strong> 前进
+                    </div>
+
+                    <div class="exp-container">
+                        <div class="exp-labels">
+                            <span>📊 总学习积分</span>
+                            <span id="exp-ratio">0 / 300 EXP</span>
+                        </div>
+                        <div class="exp-bar-track">
+                            <div class="exp-bar-fill" id="global-exp-fill"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 引导小贴士 -->
+                <div class="tip-box">
+                    <i class="fa-regular fa-lightbulb"></i>
+                    <strong>怎么用？</strong>
+                    每门课设置「总课时」与「已学课时」。每学完一节课，点击卡片上的
+                    <strong>「+」</strong> 按钮，进度自动推进，积分同步增长！
+                </div>
+            </div>
+
+            <button class="btn-add-quest" onclick="openQuestModal()">
+                <i class="fa-solid fa-plus-circle"></i> 添加新课程
+            </button>
+        </div>
+
+        <!-- ====== 右侧：课程列表 ====== -->
+        <div class="quest-board">
+            <div class="board-header">
+                <h2>📚 我的课程</h2>
+                <span class="hint" id="active-count">共 0 门课</span>
+            </div>
+
+            <div class="quest-list" id="quest-container">
+                <!-- 由 JavaScript 动态渲染 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== 弹窗 ====== -->
+    <div class="modal-overlay" id="quest-modal">
+        <div class="modal-box">
+            <h3 class="modal-title" id="modal-title">📝 添加新课程</h3>
+            <input type="hidden" id="edit-quest-id" />
+
+            <div class="form-row form-group">
+                <div>
+                    <label class="form-label">图标</label>
+                    <input type="text" id="quest-icon-input" class="form-input" value="📚" style="text-align:center;" />
+                </div>
+                <div>
+                    <label class="form-label">课程名称</label>
+                    <input type="text" id="quest-name-input" class="form-input" placeholder="例如：新概念英语第三册" />
+                </div>
+            </div>
+
+            <div class="form-row form-group">
+                <div>
+                    <label class="form-label">已学课时</label>
+                    <input type="number" id="quest-current-input" class="form-input" value="0" min="0" />
+                </div>
+                <div>
+                    <label class="form-label">总课时</label>
+                    <input type="number" id="quest-total-input" class="form-input" value="20" min="1" />
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-dialog cancel" onclick="closeQuestModal()">取消</button>
+                <button class="btn-dialog save" onclick="saveQuest()">保存课程</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        //  数据层
+        // ============================================================
+
+        // 默认种子课程
+        const defaultQuests = [
+            { id: 1, icon: '🗣️', name: '雅思口语高频素材', current: 8, total: 20 },
+            { id: 2, icon: '📖', name: '新概念英语经典背诵', current: 15, total: 30 },
+            { id: 3, icon: '💻', name: 'Vue 3 核心进阶', current: 5, total: 40 },
+        ];
+
+        let quests = JSON.parse(localStorage.getItem('explorer_quests')) || defaultQuests;
+        let totalExp = parseInt(localStorage.getItem('explorer_total_exp')) || 120;
+
+        // ============================================================
+        //  音效系统
+        // ============================================================
+
+        const playSound = (type) => {
+            try {
+                const ctx = new(window.AudioContext || window.webkitAudioContext)();
+                if (type === 'click') {
+                    const now = ctx.currentTime;
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(587.33, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.10);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    gain.gain.setValueAtTime(0.10, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'levelup') {
+                    const now = ctx.currentTime;
+                    const notes = [329.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
+                    notes.forEach((freq, idx) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        gain.gain.setValueAtTime(0.08, now + idx * 0.08);
+                        gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.35);
+                        osc.start(now + idx * 0.08);
+                        osc.stop(now + idx * 0.08 + 0.35);
+                    });
+                }
+            } catch (_) { /* 静默降级 */ }
+        };
+
+        // ============================================================
+        //  浮动 + 撒花特效
+        // ============================================================
+
+        const createExpPop = (element, text = '+30 EXP') => {
+            const rect = element.getBoundingClientRect();
+            const pop = document.createElement('div');
+            pop.className = 'exp-pop';
+            pop.innerText = text;
+            pop.style.left = `${rect.left + window.scrollX + rect.width / 2 - 40}px`;
+            pop.style.top = `${rect.top + window.scrollY - 8}px`;
+            document.body.appendChild(pop);
+            setTimeout(() => pop.remove(), 800);
+        };
+
+        // —— 撒花 Canvas ——
+        const canvas = document.getElementById('celebration-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        const resizeCanvas = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const triggerCelebration = () => {
+            playSound('levelup');
+            const colors = ['#e2c47c', '#395c78', '#679275', '#f5edd7', '#bf8d21', '#d4a373'];
+            for (let i = 0; i < 120; i++) {
+                particles.push({
+                    x: canvas.width / 2 + (Math.random() - 0.5) * 120,
+                    y: canvas.height / 2 + (Math.random() - 0.5) * 120,
+                    vx: (Math.random() - 0.5) * 16,
+                    vy: (Math.random() - 0.5) * 16 - 4,
+                    radius: Math.random() * 7 + 3,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    alpha: 1,
+                    decay: Math.random() * 0.018 + 0.008,
+                });
+            }
+        };
+
+        const animateParticles = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.18;
+                p.alpha -= p.decay;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.alpha;
+                ctx.fill();
+                if (p.alpha <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+            ctx.globalAlpha = 1;
+            requestAnimationFrame(animateParticles);
+        };
+        animateParticles();
+
+        // ============================================================
+        //  核心渲染
+        // ============================================================
+
+        const saveAndRender = () => {
+            localStorage.setItem('explorer_quests', JSON.stringify(quests));
+            localStorage.setItem('explorer_total_exp', totalExp);
+
+            // 等级计算
+            const level = Math.floor(totalExp / 300) + 1;
+            const currentLevelExp = totalExp % 300;
+            const titles = ['知识学者', '迷宫先锋', '远古贤者', '真理编织者', '知识神明'];
+            const title = titles[Math.min(level - 1, titles.length - 1)];
+
+            document.getElementById('level-badge').innerText = `LV.${level} ${title}`;
+            document.getElementById('exp-ratio').innerText = `${currentLevelExp} / 300 EXP`;
+            document.getElementById('global-exp-fill').style.width = `${(currentLevelExp / 300) * 100}%`;
+
+            // 渲染课程卡片
+            const container = document.getElementById('quest-container');
+            container.innerHTML = '';
+
+            quests.forEach((q) => {
+                const percent = q.total > 0 ? Math.round((q.current / q.total) * 100) : 0;
+                const isCompleted = percent >= 100;
+
+                const card = document.createElement('div');
+                card.className = `quest-card ${isCompleted ? 'completed' : ''}`;
+                card.innerHTML = `
+                    <div class="quest-header">
+                        <div class="quest-meta">
+                            <div class="quest-icon">${q.icon || '📚'}</div>
+                            <div class="quest-title">${q.name}</div>
+                        </div>
+                        <div class="quest-edit-group">
+                            <button class="btn-edit-tool" onclick="openQuestModal(${q.id})" title="编辑课程">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </button>
+                            <button class="btn-edit-tool delete" onclick="deleteQuest(${q.id})" title="删除课程">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="quest-progress-info">
+                            <span>📌 学习进度</span>
+                            <span>${q.current} / ${q.total} 课时 · ${percent}%</span>
+                        </div>
+                        <div class="quest-progress-track">
+                            <div class="quest-progress-fill" style="width: ${percent}%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="quest-actions">
+                        <div class="quest-nav-btns">
+                            <button class="btn-control minus" onclick="adjustCount(${q.id}, -1, this)" title="撤销一节课（-1）">−</button>
+                            <button class="btn-control plus" onclick="adjustCount(${q.id}, 1, this)" title="完成一节课（+1）">+</button>
+                        </div>
+                        <span class="quest-status-tag">
+                            ${isCompleted ? '✅ 已通关' : '⏳ 攻略中'}
+                        </span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            document.getElementById('active-count').innerText = `共 ${quests.length} 门课`;
+        };
+
+        // ============================================================
+        //  交互操作
+        // ============================================================
+
+        function adjustCount(id, change, btnElement) {
+            const quest = quests.find((q) => q.id === id);
+            if (!quest) return;
+
+            const prevPercent = Math.round((quest.current / quest.total) * 100);
+            const newVal = Math.max(0, Math.min(quest.total, quest.current + change));
+            quest.current = newVal;
+
+            if (change > 0) {
+                playSound('click');
+                totalExp += 15;
+                createExpPop(btnElement, '+15 积分 ✨');
+
+                const newPercent = Math.round((quest.current / quest.total) * 100);
+                if (prevPercent < 100 && newPercent >= 100) {
+                    totalExp += 100;
+                    triggerCelebration();
+                    setTimeout(() => createExpPop(btnElement, '🏆 通关奖励 +100 积分!'), 400);
+                }
+            } else {
+                totalExp = Math.max(0, totalExp - 15);
+            }
+
+            saveAndRender();
+        }
+
+        // ============================================================
+        //  弹窗管理
+        // ============================================================
+
+        function openQuestModal(id = null) {
+            const modal = document.getElementById('quest-modal');
+            modal.classList.add('active');
+
+            if (id) {
+                document.getElementById('modal-title').innerText = '✏️ 编辑课程';
+                const quest = quests.find((q) => q.id === id);
+                document.getElementById('edit-quest-id').value = quest.id;
+                document.getElementById('quest-icon-input').value = quest.icon;
+                document.getElementById('quest-name-input').value = quest.name;
+                document.getElementById('quest-current-input').value = quest.current;
+                document.getElementById('quest-total-input').value = quest.total;
+            } else {
+                document.getElementById('modal-title').innerText = '📝 添加新课程';
+                document.getElementById('edit-quest-id').value = '';
+                document.getElementById('quest-icon-input').value = '📚';
+                document.getElementById('quest-name-input').value = '';
+                document.getElementById('quest-current-input').value = '0';
+                document.getElementById('quest-total-input').value = '20';
+            }
+        }
+
+        function closeQuestModal() {
+            document.getElementById('quest-modal').classList.remove('active');
+        }
+
+        // ============================================================
+        //  保存 / 删除
+        // ============================================================
+
+        function saveQuest() {
+            const id = document.getElementById('edit-quest-id').value;
+            const icon = document.getElementById('quest-icon-input').value.trim() || '📚';
+            const name = document.getElementById('quest-name-input').value.trim() || '未命名课程';
+            let current = parseInt(document.getElementById('quest-current-input').value) || 0;
+            let total = parseInt(document.getElementById('quest-total-input').value) || 20;
+            if (total < 1) total = 1;
+            if (current > total) current = total;
+
+            if (id) {
+                const quest = quests.find((q) => q.id === parseInt(id));
+                if (quest) {
+                    quest.icon = icon;
+                    quest.name = name;
+                    quest.current = current;
+                    quest.total = total;
+                }
+            } else {
+                quests.push({
+                    id: Date.now(),
+                    icon,
+                    name,
+                    current,
+                    total,
+                });
+            }
+
+            closeQuestModal();
+            saveAndRender();
+            playSound('click');
+        }
+
+        function deleteQuest(id) {
+            if (confirm('确定要删除这门课吗？所有进度将被移除。')) {
+                quests = quests.filter((q) => q.id !== id);
+                saveAndRender();
+            }
+        }
+
+        // ============================================================
+        //  启动
+        // ============================================================
+
+        saveAndRender();
+
+        // 点击弹窗外关闭
+        document.getElementById('quest-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeQuestModal();
+        });
+
+        // 键盘支持：ESC 关闭弹窗
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeQuestModal();
+        });
+    </script>
+
+</body>
+</html>
